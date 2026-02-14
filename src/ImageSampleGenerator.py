@@ -4,7 +4,7 @@ from .SampleGenerator import *
 import random
 
 
-# TODO: full path, this could be accessed from anywhere
+
 class ImageSampleGenerator(SampleGenerator):
     def __init__(self, folder = None, images = None, sample_size = 5):
         self.sample_size  = sample_size

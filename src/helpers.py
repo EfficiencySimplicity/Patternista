@@ -9,10 +9,12 @@ import matplotlib.pyplot as plt
 
 
 
+# TODO: full path, this could be accessed from anywhere
 def get_images_from_folder(folder):
     images = []
 
-    for filename in glob.glob(f'data/{folder}/*.jpg') + glob.glob(f'data/{folder}/*.png'):
+    # TODO: make this better; I.E. LEARN REGEX
+    for filename in glob.glob(f'data/{folder}/*.jpg') + glob.glob(f'data/{folder}/*.jpeg') + glob.glob(f'data/{folder}/*.png'):
         im = Image.open(filename)
         im = np.array(im).astype(np.float32) / 255
         images.append(im)
