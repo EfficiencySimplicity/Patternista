@@ -9,10 +9,6 @@ import matplotlib.pyplot as plt
 
 
 
-def difference(a, b):
-    return 1 - np.abs(a - b)
-
-
 def get_images_from_folder(folder):
     images = []
 

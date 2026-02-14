@@ -3,8 +3,22 @@ from .helpers import *
 
 
 
+def abs_difference(a, b):
+    return 1 - np.abs(a - b)
+
+
+def average_update(a, b, examples_seen, learning_rate='auto'):
+    if learning_rate == 'auto': average_amount = 1 / (examples_seen+1)
+    else: average_amount = learning_rate
+
+    return (a * (1 - average_amount)) + (b * average_amount)
+
+
+# TODO: add a seperate update_fn for the uncertainty
+# TODO: docstrings
+# TODO: plotting patterns for various shapes, make sure to apply squeeze() for tiny dimensions
 class PatternMatcher:
-    def __init__(self, num_patterns, pattern_initializer, comparison_fn = difference):
+    def __init__(self, num_patterns, pattern_initializer, comparison_fn = abs_difference, update_fn = average_update):
         self.num_patterns     = num_patterns
         self.sample_generator = pattern_initializer
         self.pattern_shape    = pattern_initializer.sample_shape
@@ -13,16 +27,14 @@ class PatternMatcher:
         self.examples_seen    = np.ones([self.num_patterns])
 
         self.comparison_fn    = comparison_fn
+        self.update_fn        = update_fn
 
     def train_sample(self, sample = None, learning_rate = 'auto'):
         sample = sample or self.sample_generator.get_sample()
 
-        most_similar   = self.get_most_similar(sample)
-        chosen_pattern = self.patterns[most_similar]
+        most_similar = self.get_most_similar(sample)
         
-        if (learning_rate == 'auto'): learning_rate = 1 / (self.examples_seen[most_similar]+1)
-        
-        self.patterns[most_similar] = chosen_pattern * (1 - learning_rate) + sample * learning_rate
+        self.patterns[most_similar]      = self.update_fn(self.patterns[most_similar], sample, self.examples_seen[most_similar], learning_rate)
         self.examples_seen[most_similar] += 1
 
     def get_most_similar(self, sample):
@@ -33,7 +45,7 @@ class PatternMatcher:
     
     def get_activation_map(self, image):
         if (len(self.pattern_shape) != 3):
-            raise Exception(f"This function only available with a 3D pattern shape, this shape: {self.pattern_shape}")
+            raise Exception(f"This function only available with a 3D pattern shape, this PatternMatcher has shape: {self.pattern_shape}")
         
         w,h,c = image.shape
         x_tiles = int(math.floor(w / self.pattern_shape[0]))-1
