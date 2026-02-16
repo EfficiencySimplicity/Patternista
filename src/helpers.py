@@ -40,6 +40,17 @@ def pixellate(image, chunk_size = 5):
     return pixel_map
 
 
+def pixellate_batch(batch, chunk_size = 5):
+    b, w, h, c = batch.shape
+    s       = chunk_size
+
+    pixel_map = batch.reshape(b, w//s, s, h//s, s, c)
+    pixel_map = pixel_map.transpose(0,1,3,2,4,5)
+
+    pixel_map = np.average(pixel_map, axis = (3,4,5))
+    return pixel_map
+
+
 # https://stackoverflow.com/questions/2197020/create-grid-out-of-number-of-elements
 
 def plot_image_grid(images):

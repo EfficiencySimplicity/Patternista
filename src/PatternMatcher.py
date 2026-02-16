@@ -43,6 +43,8 @@ class PatternMatcher:
     def get_similarity_scores(self, sample):
         return np.average(self.comparison_fn(self.patterns, sample), axis=list(range(1, len(self.pattern_shape)+1)))
     
+
+
     def get_activation_map(self, image):
         if (len(self.pattern_shape) != 3):
             raise Exception(f"This function only available with a 3D pattern shape, this PatternMatcher has shape: {self.pattern_shape}")
@@ -55,26 +57,26 @@ class PatternMatcher:
                                    w-self.pattern_shape[0]+1,
                                    h-self.pattern_shape[1]+1])
 
-        # per-pattern for now
-        for i, pattern in enumerate(self.patterns):
-            tiled = np.tile(pattern, [x_tiles, y_tiles, 1])
+        tiled = np.tile(self.patterns, [1, x_tiles, y_tiles, 1])
 
-            max_x = w - tiled.shape[0] + 1
-            max_y = h - tiled.shape[1] + 1
+        max_x = w - tiled.shape[1] + 1
+        max_y = h - tiled.shape[2] + 1
 
-            for x in range(0, max_x):
-                for y in range(0, max_y):
-                    padded = np.pad(tiled, [[x, max_x - x - 1],[y, max_y - y - 1],[0,0]])
+        for x in range(0, max_x):
+            for y in range(0, max_y):
 
-                    subbed = self.comparison_fn(padded, image)
-                    subbed = subbed[x:tiled.shape[0] + x, y:tiled.shape[1] + y]
-                    subbed = pixellate(subbed, chunk_size=self.pattern_shape[0])
-                    
-                    activation_map[i, 
-                                   x:x + tiled.shape[0]:self.pattern_shape[0], 
-                                   y:y + tiled.shape[1]:self.pattern_shape[1]] = subbed
+                padded = np.pad(tiled, [[0,0],[x, max_x - x - 1],[y, max_y - y - 1],[0,0]])
+
+                subbed = self.comparison_fn(padded, image)
+
+                subbed = subbed[:, x:tiled.shape[1] + x, y:tiled.shape[2] + y]
+
+                subbed = pixellate_batch(subbed, chunk_size=self.pattern_shape[0])
+                
+                activation_map[:,
+                               x:x + tiled.shape[1]:self.pattern_shape[0], 
+                               y:y + tiled.shape[2]:self.pattern_shape[1]] = subbed
                     
         return activation_map
-
     # separation should be easy
     # divergence
